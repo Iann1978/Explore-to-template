@@ -106,6 +106,60 @@ constexpr size_t Accumulate2()
 }
 
 constexpr size_t sumNumbers = Accumulate2<1, 2, 3, 4, 5>();
+
+
+// 1.3.4 explode
+//template <size_t Input>
+//constexpr size_t OnesCount = (Input % 2) + OnesCount<(Input / 2)>;
+//template <> constexpr size_t OnesCount<0> = 0;
+constexpr size_t OnesCountOf7 = OnesCount<7>;
+constexpr size_t OnesCountOf15 = OnesCount<15>;
+
+template <size_t A>
+struct Sum_ {
+	template <size_t ID, typename TDummy = void>
+	struct imp {
+		constexpr static size_t value = ID + imp<ID-1>::value;
+	};
+	template <typename TDummy>
+	struct imp<0, TDummy> {
+		constexpr static size_t value = 0;
+	};
+	template <size_t ID>
+	constexpr static size_t value = imp<A + ID>::value;
+};
+
+// 1.3.5 Switch choice and shortcut logic
+template <size_t N>
+constexpr bool is_odd = ((N % 2) == 1);
+
+//template <size_t... Numbers>
+//struct IsAllOdd_ {
+//	constexpr static bool value = false;
+//};
+
+//template <size_t FirstNumber>
+//struct IsAllOdd_ {
+//	constexpr staticbool value = is_odd<FirstNumber>;
+//};
+
+template <size_t FirstNumber, size_t... Numbers>
+struct IsAllOdd_ {
+	//constexpr static bool value = is_odd<FirstNumber> && IsAllOdd_<Numbers...>::value;
+	constexpr static bool value = AndValue<is_odd<FirstNumber>, IsAllOdd_<Numbers...>>;
+};
+
+template<size_t FirstNumber>
+struct IsAllOdd_<FirstNumber>{
+	constexpr static bool value = is_odd<FirstNumber>;
+};
+
+template <bool cur, typename TNext>
+constexpr static bool AndValue = false;
+
+template <typename TNext>
+constexpr static bool AndValue<true, TNext> = TNext::value;
+
 int main()
 {
 	std::cout << "Hello Sequence and Switcher!!!" << std::endl;
@@ -130,13 +184,22 @@ int main()
 	std::cout << "TypedFun<double>() = " << TypedFun<double>() << std::endl;
 	std::cout << "TypedFun<int>() = " << TypedFun<int>() << std::endl;
 
-	std::cout << "OnesCout<45> is " << OnesCount<45> << std::endl;
+	std::cout << "OnesCount<45> is " << OnesCount<45> << std::endl;
 
 	std::cout << "Accumulate<2,3,4,5> is " << Accumulate<2, 3, 4, 5, 6> << std::endl;
 	std::cout << "Accumulate2<2,3,4,5> is " << Accumulate2<1,2,3,4,5>() << std::endl;
 
-	
 
+	std::cout << "OnesCount<7> is " << OnesCount<7> << std::endl;
+	std::cout << "OnesCount<15> is " << OnesCount<15> << std::endl;
+	std::cout << "OnesCount<45> is " << OnesCount<45> << std::endl;
+
+	std::cout << "Sum of 1...(5+6) is " <<Sum_<5>::value<6> << std::endl;
+
+	std::cout << "IsAllOdd_<1>::value is " << (IsAllOdd_<1>::value ? "true" : "false") << std::endl;
+	std::cout << "IsAllOdd_<0>::value is " << (IsAllOdd_<0>::value ? "true" : "false") << std::endl;
+	std::cout << "IsAllOdd_<1,3,5,7>::value is " << (IsAllOdd_<1, 3, 5, 7>::value ? "true" : "false") << std::endl;
+	std::cout << "IsAllOdd_<2,4,6,7>::value is " << (IsAllOdd_<2, 4, 6, 7>::value ? "true" : "false") << std::endl;
 	printer("The number is ", sumNumbers);
 	return 0;
 }
